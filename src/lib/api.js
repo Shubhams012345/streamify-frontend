@@ -14,12 +14,12 @@ export const signup=async(signupData)=>{
         };
 
         export const getAuthUser = async () => {
-  try {
+      try {
     const res = await axiosInstance.get("/auth/me");
     return res.data;
-  } catch (error) {
+     } catch (error) {
     return { success: false, user: null };
-  }
+   }
 };
 
       export const completeOnboarding=async(formData)=>{

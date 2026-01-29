@@ -10,19 +10,12 @@ const useLogin = () => {
     mutationFn: login,
 
     onSuccess: (data) => {
-      // Store auth user in cache
       queryClient.setQueryData(["authUser"], data);
-
-      // Redirect after successful login
       navigate("/");
-    },
-
-    onError: (err) => {
-      console.log("Login error:", err);
     }
   });
 
-  return { error, isPending, loginMutation };
+  return { loginMutation, isPending, error };
 };
 
 export default useLogin;

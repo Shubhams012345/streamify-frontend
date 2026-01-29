@@ -10,15 +10,8 @@ const useLogout = () => {
     mutationFn: logout,
 
     onSuccess: () => {
-     
       queryClient.clear();
-
-      // Redirect to login page
       navigate("/login");
-    },
-
-    onError: (err) => {
-      console.log("Logout failed:", err);
     }
   });
 
