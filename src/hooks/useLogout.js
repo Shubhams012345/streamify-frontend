@@ -10,8 +10,15 @@ const useLogout = () => {
     mutationFn: logout,
 
     onSuccess: () => {
+      // Clear all cached auth data
       queryClient.clear();
-      navigate("/login");
+
+      // Force redirect to login
+      navigate("/login", { replace: true });
+    },
+
+    onError: (err) => {
+      console.log("Logout failed:", err);
     }
   });
 
