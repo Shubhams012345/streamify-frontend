@@ -32,10 +32,19 @@ const recommendedUsers = recommendedData?.recomendedUsers || []
 
 const outgoingFriendReqs = outgoingData?.outGoingRequest || []
 
-  const {mutate:sendRequestMutation,isPending}=useMutation({
-    mutationFn:sendFriendRequest,
-    onSuccess:()=>queryClient.invalidateQueries({queryKey:["outgoingFriendReqs"]})
-  })
+  const { mutate: sendRequestMutation, isPending } = useMutation({
+  mutationFn: sendFriendRequest,
+  onSuccess: (_, userId) => {
+    setOutgoingRequestIds(prev => {
+      const updated = new Set(prev);
+      updated.add(userId);
+      return updated;
+    });
+
+    queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+  }
+});
+
   useEffect(()=>{
     const outgoingIds=new Set();
     if(outgoingFriendReqs && outgoingFriendReqs.length>0){
