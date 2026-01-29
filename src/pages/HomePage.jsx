@@ -106,7 +106,7 @@ const outgoingFriendReqs = outgoingData?.outGoingRequest || []
                     <div className="card-body p-5 space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="avatar size-16 rounded-full">
-                          <img src={user.profilePic} alt={user.fullName} />
+                          <img src={user.profilePic || "https://api.dicebear.com/5.x/initials/svg?seed=User"} alt={user.fullName} />
                         </div>
 
                         <div>
