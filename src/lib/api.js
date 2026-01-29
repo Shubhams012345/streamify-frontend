@@ -13,16 +13,15 @@ export const signup=async(signupData)=>{
             return response.data;
         };
 
-        export const getAuthUser=async()=>{
-      try{
-          const res=await axiosInstance.get("/auth/me");
-          return res.data;
-      }
-      catch(error){
-          console.log("Error in getAuthUser:",error);
-          return null;
-      }
-}        
+        export const getAuthUser = async () => {
+  try {
+    const res = await axiosInstance.get("/auth/me");
+    return res.data;
+  } catch (error) {
+    return { success: false, user: null };
+  }
+};
+
       export const completeOnboarding=async(formData)=>{
     const result=await axiosInstance.post("/auth/onBoarding",formData)
     return result.data;
