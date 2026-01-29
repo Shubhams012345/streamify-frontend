@@ -30,7 +30,7 @@ const recommendedUsers = recommendedData?.recomendedUsers || []
   queryFn: getOutgoingFriendReqs,
 })
 
-const outgoingFriendReqs = outgoingData?.outGoingRequest || []
+const outgoingFriendReqs = outgoingData?.outGoingRequests || outgoingData?.outGoingRequest || []
 
   const { mutate: sendRequestMutation, isPending } = useMutation({
   mutationFn: sendFriendRequest,
@@ -49,7 +49,9 @@ const outgoingFriendReqs = outgoingData?.outGoingRequest || []
     const outgoingIds=new Set();
     if(outgoingFriendReqs && outgoingFriendReqs.length>0){
        outgoingFriendReqs.forEach((req)=>{
-      outgoingIds.add(req.reciptent)
+       if (req?.recipient?._id) {
+        outgoingIds.add(req.recipient._id);
+      }
        })
        setOutgoingRequestIds(outgoingIds)
     }
