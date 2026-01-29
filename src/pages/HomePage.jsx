@@ -7,6 +7,7 @@ import NoFriendsFound from '../components/NoFriendsFound';
 import { Link } from 'react-router-dom';
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 import getLanguageFlag from "../components/FriendCard"
+import { capitalize } from "../lib/utils";
 const HomePage = () => {
   const queryClient=useQueryClient();
 const [outgoingRequestIds, setOutgoingRequestIds] = useState(new Set());
