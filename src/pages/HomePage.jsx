@@ -64,7 +64,7 @@ const outgoingFriendReqs = outgoingData?.outGoingRequest || []
           <NoFriendsFound />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            { friends.map((friend) => (
+          { friends?.filter(Boolean).map((friend) => (
               <FriendCard key={friend._id} friend={friend} />
             ))}
           </div>
@@ -95,7 +95,7 @@ const outgoingFriendReqs = outgoingData?.outGoingRequest || []
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              { recommendedUsers.map((user) => {
+             { recommendedUsers.filter(Boolean).map((user) => {
                 const hasRequestBeenSent = outgoingRequestIds.has(user._id);
 
                 return (
