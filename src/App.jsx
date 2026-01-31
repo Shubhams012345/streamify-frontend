@@ -18,7 +18,7 @@ const App = () => {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <div className="h-screen" data-theme={theme}>
+    <div className="min-h-screen w-full" data-theme={theme}>
       <Routes>
       {/* HOME */}
       <Route
