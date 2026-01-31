@@ -1,14 +1,11 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import {
-  getUserFriends,
-  getRecommendedUsers,
   getOutgoingFriendReqs,
+  getRecommendedUsers,
+  getUserFriends,
   sendFriendRequest,
 } from "../lib/api";
-import { useEffect } from "react";
-import FriendCard from "../components/FriendCard";
-import NoFriendsFound from "../components/NoFriendsFound";
 import { Link } from "react-router-dom";
 import {
   CheckCircleIcon,
@@ -16,76 +13,50 @@ import {
   UserPlusIcon,
   UsersIcon,
 } from "lucide-react";
-import getLanguageFlag from "../components/FriendCard";
+
 import { capitalize } from "../lib/utils";
-import useAuthUser from "../hooks/useAuthUser";
-import { toast } from "react-hot-toast";
+
+import FriendCard, { getLanguageFlag } from "../components/FriendCard";
+import NoFriendsFound from "../components/NoFriendsFound";
 
 const HomePage = () => {
-  const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
-  const [outgoingRequestIds, setOutgoingRequestIds] = useState(new Set());
+  const [outgoingRequestsIds, setOutgoingRequestsIds] = useState(new Set());
 
-  const { data, isLoading: loadingFriends } = useQuery({
-    queryKey: ["friends"],
-    queryFn: getUserFriends,
-    enabled: !!authUser,
-  });
-  const friends = data?.friends || [];
+const { data: friends = [], isLoading: loadingFriends } = useQuery({
+  queryKey: ["friends"],
+  queryFn: getUserFriends,
+  select: (data) => (Array.isArray(data.friends) ? data.friends : []), 
+});
 
-  const { data: recommendedData, isLoading: loadingUsers } = useQuery({
-    queryKey: ["users"],
-    queryFn: getRecommendedUsers,
-    enabled: !!authUser,
-  });
+const { data: recommendedUsers = [], isLoading: loadingUsers } = useQuery({
+  queryKey: ["users"],
+  queryFn: getRecommendedUsers,
+  select: (data) => (Array.isArray(data.recomendedUsers) ? data.recomendedUsers : []), 
+});
 
-  const recommendedUsers = recommendedData?.recomendedUsers || [];
 
-  const { data: outgoingData } = useQuery({
-    queryKey: ["outgoingFriendReqs"],
-    queryFn: getOutgoingFriendReqs,
-    enabled: !!authUser,
-  });
-
-  const outgoingFriendReqs =
-    outgoingData?.outGoingRequests ||
-    outgoingData?.outGoingRequest ||
-    outgoingData ||
-    [];
-
+const { data: outgoingFriendReqs = [] } = useQuery({
+  queryKey: ["outgoingFriendReqs"],
+  queryFn: getOutgoingFriendReqs,
+  select: (data) => (Array.isArray(data.outGoingRequest) ? data.outGoingRequest : []), 
+});
   const { mutate: sendRequestMutation, isPending } = useMutation({
     mutationFn: sendFriendRequest,
-    onSuccess: (data, userId) => {
-      if (!data?.success) {
-        toast.info(data?.message || "Request already exists");
-        return;
-      }
-
-      setOutgoingRequestIds((prev) => {
-        const updated = new Set(prev);
-        updated.add(userId);
-        return updated;
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
-    },
-    onError: () => {
-      toast.error("Failed to send request");
-    },
+    onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+  queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+}
   });
 
   useEffect(() => {
     const outgoingIds = new Set();
-
-    if (Array.isArray(outgoingFriendReqs)) {
+    if (outgoingFriendReqs && outgoingFriendReqs.length > 0) {
       outgoingFriendReqs.forEach((req) => {
-        const recipientId =
-          req?.recipient?._id || req?.recipient || req?.recipientId;
-        if (recipientId) outgoingIds.add(recipientId);
+        outgoingIds.add(req.recipient._id);
       });
+      setOutgoingRequestsIds(outgoingIds);
     }
-
-    setOutgoingRequestIds(outgoingIds);
   }, [outgoingFriendReqs]);
 
   return (
@@ -109,7 +80,7 @@ const HomePage = () => {
           <NoFriendsFound />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {friends?.filter(Boolean).map((friend) => (
+            {friends.map((friend) => (
               <FriendCard key={friend._id} friend={friend} />
             ))}
           </div>
@@ -145,8 +116,8 @@ const HomePage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedUsers.filter(Boolean).map((user) => {
-                const hasRequestBeenSent = outgoingRequestIds.has(user._id);
+              {recommendedUsers.map((user) => {
+                const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
 
                 return (
                   <div
@@ -156,13 +127,7 @@ const HomePage = () => {
                     <div className="card-body p-5 space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="avatar size-16 rounded-full">
-                          <img
-                            src={
-                              user.profilePic ||
-                              "https://api.dicebear.com/5.x/initials/svg?seed=User"
-                            }
-                            alt={user.fullName}
-                          />
+                          <img src={user.profilePic} alt={user.fullName} />
                         </div>
 
                         <div>
@@ -196,18 +161,21 @@ const HomePage = () => {
 
                       {/* Action button */}
                       <button
-                        className={`btn w-full mt-2 ${hasRequestBeenSent ? "btn-disabled" : "btn-primary"}`}
-                        disabled={hasRequestBeenSent || isPending}
-                        onClick={() => {
-                          if (hasRequestBeenSent) return;
-
-                          setOutgoingRequestIds((prev) =>
-                            new Set(prev).add(user._id),
-                          );
-                          sendRequestMutation(user._id);
-                        }}
+                        className={`btn w-full mt-2 ${
+                          hasRequestBeenSent ? "btn-disabled" : "btn-primary"
+                        } `}
+                        onClick={() => sendRequestMutation(user._id)}
+                        // FIX: Only disable the specific button being clicked
+                        disabled={
+                          hasRequestBeenSent ||
+                          (isPending &&
+                            sendRequestMutation.variables === user._id)
+                        }
                       >
-                        {hasRequestBeenSent ? (
+                        {isPending &&
+                        sendRequestMutation.variables === user._id ? (
+                          <span className="loading loading-spinner loading-xs"></span>
+                        ) : hasRequestBeenSent ? (
                           <>
                             <CheckCircleIcon className="size-4 mr-2" />
                             Request Sent

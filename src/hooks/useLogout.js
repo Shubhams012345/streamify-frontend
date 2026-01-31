@@ -1,27 +1,18 @@
-import { useNavigate } from "react-router-dom"
-import { axiosInstance } from "../lib/axios"
-import useAuthUser from "./useAuthUser"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { logout } from "../lib/api";
 
 const useLogout = () => {
-  const navigate = useNavigate()
-  const { setAuthUser } = useAuthUser()
+  const queryClient = useQueryClient();
 
-  const logout = async () => {
-    try {
-      await axiosInstance.post("/auth/logout")
-      queryClient.clear()
-      setAuthUser(null)
-      localStorage.removeItem("authUser")
+  const {
+    mutate: logoutMutation,
+    isPending,
+    error,
+  } = useMutation({
+    mutationFn: logout,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+  });
 
-      navigate("/login", { replace: true })
-
-      window.location.reload()
-    } catch (error) {
-      console.error("Logout failed", error)
-    }
-  }
-
-  return { logout }
-}
-
-export default useLogout
+  return { logoutMutation, isPending, error };
+};
+export default useLogout;
